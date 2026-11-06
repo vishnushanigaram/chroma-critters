@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Chroma Critters: Galactic Snack Safari</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧁</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- App Wrapper -->
+  <div id="game-wrapper">
+    <div id="canvas-container">
+      <canvas id="game-canvas"></canvas>
+
+      <!-- In-Game HUD Overlay (Top & Bottom) -->
+      <div id="in-game-hud" class="ui-overlay" style="display: none;">
+        <!-- Top HUD -->
+        <div class="hud-top interactive-ui">
+          <button class="btn-icon" onclick="window.game.showScreen('MENU')" title="Back to Menu">🏠</button>
+          
+          <div class="hud-pill">
+            <span class="hud-icon">⭐</span>
+            <span id="hud-score-val">0</span>
+          </div>
+
+          <div class="hud-pill">
+            <span class="hud-icon">⚡</span>
+            <span id="hud-combo-val">x1</span>
+          </div>
+
+          <div class="hud-controls">
+            <button class="btn-icon" id="sound-toggle-btn" onclick="window.game.toggleMute()" title="Toggle Sound">
+              <span id="sound-toggle-icon">🔊</span>
+            </button>
+            <button class="btn-icon" onclick="window.game.startAdventureLevel(window.game.currentLevelIndex)" title="Restart Level">🔄</button>
+            <button class="btn-icon" onclick="window.game.toggleFullscreen()" title="Fullscreen">⛶</button>
+          </div>
+        </div>
+
+        <!-- Bottom Ammo Tray -->
+        <div class="hud-bottom interactive-ui">
+          <div class="ammo-tray">
+            <div class="ammo-tray-title">Snack Spoon:</div>
+            <div class="ammo-items" id="ammo-slots-container">
+              <!-- Dynamically populated ammo slots -->
+            </div>
+          </div>
+          <div></div>
+        </div>
+      </div>
+
+      <!-- Achievement Toast Banner -->
+      <div id="achievement-toast" class="achievement-toast">
+        <div class="toast-icon" id="toast-icon">🏆</div>
+        <div class="toast-text">
+          <div class="toast-title">Achievement Unlocked!</div>
+          <div class="toast-name" id="toast-name">Super Snack!</div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+           MODAL 1: MAIN MENU
+           ========================================================== -->
+      <div id="modal-main-menu" class="screen-modal active">
+        <div class="modal-content-card">
+          <div class="title-container">
+            <div class="game-logo">
+              <h1>Chroma Critters</h1>
+              <div class="tagline">✦ Galactic Snack Safari ✦</div>
+            </div>
+
+            <!-- Cute Animated Critters Preview -->
+            <div class="menu-critters-showcase">
+              <div class="critter-avatar-preview" title="Bloop">🫐</div>
+              <div class="critter-avatar-preview" title="Puff">🍓</div>
+              <div class="critter-avatar-preview" title="Zippy">⭐</div>
+              <div class="critter-avatar-preview" title="Gromp">🍈</div>
+              <div class="critter-avatar-preview" title="Cosmo">🧁</div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="menu-buttons-list">
+              <button class="btn-juicy btn-pink" onclick="window.game.showScreen('LEVEL_SELECT')">
+                <span>🚀</span> Play Adventure
+              </button>
+              <button class="btn-juicy btn-yellow" onclick="window.game.startEndlessRush()">
+                <span>🔥</span> Endless Snack Rush
+              </button>
+              <button class="btn-juicy btn-blue" onclick="window.game.showScreen('SANCTUARY')">
+                <span>🧸</span> Pet Sanctuary & Dress-Up
+              </button>
+              <button class="btn-juicy btn-green" onclick="window.game.showScreen('ACHIEVEMENTS')">
+                <span>🏆</span> Badges & Stars
+              </button>
+              <button class="btn-juicy btn-purple" onclick="window.game.showScreen('HOW_TO_PLAY')">
+                <span>❓</span> How to Play
+              </button>
+              <button class="btn-juicy btn-yellow" onclick="window.game.showScreen('SETTINGS')">
+                <span>⚙️</span> Sound & Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+           MODAL 2: LEVEL SELECT
+           ========================================================== -->
+      <div id="modal-level-select" class="screen-modal">
+        <div class="modal-content-card">
+          <button class="modal-close-btn" onclick="window.game.showScreen('MENU')">✕</button>
+          <h2 class="modal-title"><span>🏝️</span> Adventure Island</h2>
+          <p class="modal-subtitle">Pick a level to explore, mix colors, and feed hungry critters!</p>
+
+          <div class="level-grid" id="level-grid-container">
+            <!-- 12 Level cards dynamically generated -->
+          </div>
+
+          <div class="modal-actions-row">
+            <button class="btn-juicy btn-purple" onclick="window.game.showScreen('MENU')">
+              <span>🏠</span> Back to Menu
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+           MODAL 3: PET SANCTUARY & DRESS UP ROOM
+           ========================================================== -->
+      <div id="modal-sanctuary" class="screen-modal">
+        <div class="modal-content-card" style="max-width: 780px;">
+          <button class="modal-close-btn" onclick="window.game.showScreen('MENU')">✕</button>
+          <h2 class="modal-title"><span>🧸</span> Critter Sanctuary</h2>
+          <p class="modal-subtitle">Pet them, feed them yummy treats, dress them up in silly hats, and snap photos!</p>
+
+          <div class="sanctuary-ui-container">
+            <!-- Critter Switcher Tabs -->
+            <div class="sanctuary-critter-tabs">
+              <button class="critter-tab-btn active" onclick="window.game.sanctuary.selectCritter('bloop')">🫐 Bloop</button>
+              <button class="critter-tab-btn" onclick="window.game.sanctuary.selectCritter('puff')">🍓 Puff</button>
+              <button class="critter-tab-btn" onclick="window.game.sanctuary.selectCritter('zippy')">⭐ Zippy</button>
+              <button class="critter-tab-btn" onclick="window.game.sanctuary.selectCritter('gromp')">🍈 Gromp</button>
+              <button class="critter-tab-btn" onclick="window.game.sanctuary.selectCritter('cosmo')">🧁 Cosmo</button>
+            </div>
+
+            <!-- Wardrobe & Hat Rack -->
+            <div class="wardrobe-section">
+              <div class="wardrobe-title"><span>🎩</span> Choose a Silly Hat for Your Buddy:</div>
+              <div class="hats-grid">
+                <div class="hat-item" onclick="window.game.sanctuary.equipHatToActive('chef')">
+                  <div class="hat-emoji">👨‍🍳</div>
+                  <div class="hat-name">Chef Hat</div>
+                </div>
+                <div class="hat-item" onclick="window.game.sanctuary.equipHatToActive('party')">
+                  <div class="hat-emoji">🥳</div>
+                  <div class="hat-name">Party Cone</div>
+                </div>
+                <div class="hat-item" onclick="window.game.sanctuary.equipHatToActive('crown')">
+                  <div class="hat-emoji">👑</div>
+                  <div class="hat-name">Crown</div>
+                </div>
+                <div class="hat-item" onclick="window.game.sanctuary.equipHatToActive('dino')">
+                  <div class="hat-emoji">🦖</div>
+                  <div class="hat-name">Dino Spikes</div>
+                </div>
+                <div class="hat-item" onclick="window.game.sanctuary.equipHatToActive('sunglasses')">
+                  <div class="hat-emoji">🕶️</div>
+                  <div class="hat-name">Cool Shades</div>
+                </div>
+                <div class="hat-item" onclick="window.game.sanctuary.equipHatToActive('flower')">
+                  <div class="hat-emoji">🌸</div>
+                  <div class="hat-name">Flower Bow</div>
+                </div>
+                <div class="hat-item" onclick="window.game.sanctuary.equipHatToActive('wizard')">
+                  <div class="hat-emoji">🧙</div>
+                  <div class="hat-name">Wizard Hat</div>
+                </div>
+                <div class="hat-item" onclick="window.game.sanctuary.equipHatToActive('none')">
+                  <div class="hat-emoji">❌</div>
+                  <div class="hat-name">No Hat</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Treat Buffet & Toys -->
+            <div class="sanctuary-toys-bar">
+              <button class="toy-btn" onclick="window.game.sanctuary.feedCritter(window.game.sanctuary.activeCritterKey, 'rainbow')">
+                <span>🧁</span> Feed Cupcake!
+              </button>
+              <button class="toy-btn" onclick="window.game.sanctuary.spawnToy('ball')">
+                <span>⚽</span> Toss Ball
+              </button>
+              <button class="toy-btn" onclick="window.game.sanctuary.spawnToy('duck')">
+                <span>🦆</span> Squeaky Duck
+              </button>
+              <button class="btn-juicy btn-pink" style="padding: 10px 20px; font-size: 1rem;" onclick="window.game.sanctuary.snapPolaroid()">
+                <span>📸</span> Snap Polaroid Photo!
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+           MODAL 4: LEVEL VICTORY CELEBRATION
+           ========================================================== -->
+      <div id="modal-victory" class="screen-modal">
+        <div class="modal-content-card">
+          <h2 class="modal-title" style="color: #ff007f;"><span>🎉</span> Level Cleared!</h2>
+          <div id="victory-level-title" style="font-size: 1.25rem; font-weight: 700; color: #5c3000;">Level 1</div>
+
+          <div class="victory-stars" id="victory-stars-box">
+            <!-- 3 animated stars -->
+          </div>
+
+          <div class="score-summary-box">
+            <div class="score-row total">
+              <span>Total Score:</span>
+              <span id="victory-score">0</span>
+            </div>
+          </div>
+
+          <div class="modal-actions-row">
+            <button class="btn-juicy btn-green" onclick="window.game.startAdventureLevel(window.game.currentLevelIndex + 1)">
+              <span>▶</span> Next Level
+            </button>
+            <button class="btn-juicy btn-blue" onclick="window.game.startAdventureLevel(window.game.currentLevelIndex)">
+              <span>🔄</span> Replay
+            </button>
+            <button class="btn-juicy btn-purple" onclick="window.game.showScreen('LEVEL_SELECT')">
+              <span>🏝️</span> Levels
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+           MODAL 5: ENDLESS GAME OVER
+           ========================================================== -->
+      <div id="modal-gameover" class="screen-modal">
+        <div class="modal-content-card">
+          <h2 class="modal-title" style="color: #ff9f1c;"><span>💤</span> Nap Time!</h2>
+          <p class="modal-subtitle">Your critter friends are full and sleepy! Great work feeding them!</p>
+
+          <div class="score-summary-box">
+            <div class="score-row">
+              <span>Your Score:</span>
+              <span id="gameover-score">0</span>
+            </div>
+            <div class="score-row total">
+              <span>Best High Score:</span>
+              <span id="gameover-highscore">0</span>
+            </div>
+          </div>
+
+          <div class="modal-actions-row">
+            <button class="btn-juicy btn-yellow" onclick="window.game.startEndlessRush()">
+              <span>🔥</span> Try Again
+            </button>
+            <button class="btn-juicy btn-purple" onclick="window.game.showScreen('MENU')">
+              <span>🏠</span> Main Menu
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+           MODAL 6: ACHIEVEMENTS & BADGES
+           ========================================================== -->
+      <div id="modal-achievements" class="screen-modal">
+        <div class="modal-content-card">
+          <button class="modal-close-btn" onclick="window.game.showScreen('MENU')">✕</button>
+          <h2 class="modal-title"><span>🏆</span> Badges & Trophies</h2>
+          <p class="modal-subtitle">Collect awesome sticker trophies as you master the game!</p>
+
+          <div class="badges-grid" id="badges-grid-container">
+            <!-- 10 badges dynamically loaded -->
+          </div>
+
+          <div class="modal-actions-row">
+            <button class="btn-juicy btn-purple" onclick="window.game.showScreen('MENU')">
+              <span>🏠</span> Back to Menu
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+           MODAL 7: HOW TO PLAY
+           ========================================================== -->
+      <div id="modal-how-to-play" class="screen-modal">
+        <div class="modal-content-card">
+          <button class="modal-close-btn" onclick="window.game.showScreen('MENU')">✕</button>
+          <h2 class="modal-title"><span>📖</span> How to Play</h2>
+          <p class="modal-subtitle">Super easy and fun for everyone!</p>
+
+          <div class="instructions-list">
+            <div class="instruction-step">
+              <div class="step-icon-bubble">🎯</div>
+              <div class="step-text">
+                <h4>1. Pull & Aim the Slingshot</h4>
+                <p>Drag the snack backward with your mouse or finger. Follow the white dotted trajectory line to aim!</p>
+              </div>
+            </div>
+
+            <div class="instruction-step">
+              <div class="step-icon-bubble">🎶</div>
+              <div class="step-text">
+                <h4>2. Bounce off Musical Chimes</h4>
+                <p>Singing crystal bells make real harmonious music when hit and give big combo bonus points!</p>
+              </div>
+            </div>
+
+            <div class="instruction-step">
+              <div class="step-icon-bubble">🌈</div>
+              <div class="step-text">
+                <h4>3. Magic Color Mixers</h4>
+                <p>Shoot through colored portals to blend snacks: Yellow + Blue = Green Melon! Red + Yellow = Orange Tangerine!</p>
+              </div>
+            </div>
+
+            <div class="instruction-step">
+              <div class="step-icon-bubble">🥰</div>
+              <div class="step-text">
+                <h4>4. Feed Hungry Critters</h4>
+                <p>Look at their thought bubble to see what snack they crave. Feed them to make them smile and dance!</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-actions-row">
+            <button class="btn-juicy btn-pink" onclick="window.game.showScreen('LEVEL_SELECT')">
+              <span>🚀</span> Start Playing!
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+           MODAL 8: SETTINGS
+           ========================================================== -->
+      <div id="modal-settings" class="screen-modal">
+        <div class="modal-content-card">
+          <button class="modal-close-btn" onclick="window.game.showScreen('MENU')">✕</button>
+          <h2 class="modal-title"><span>⚙️</span> Sound & Music</h2>
+          <p class="modal-subtitle">Customize audio to your liking</p>
+
+          <div class="settings-list">
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Background Music (BGM)</h4>
+                <p>Cheerful lo-fi synth melody</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="bgm-toggle" checked onchange="window.sound.setBGMEnabled(this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-row">
+              <div class="setting-info">
+                <h4>Sound Effects (SFX)</h4>
+                <p>Boings, chimes, and munching</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="sfx-toggle" checked onchange="window.sound.setMuted(!this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="modal-actions-row">
+            <button class="btn-juicy btn-green" onclick="window.game.showScreen('MENU')">
+              <span>✔️</span> Done
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Game Scripts in Execution Order -->
+  <script src="js/audio.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/critters.js"></script>
+  <script src="js/physics.js"></script>
+  <script src="js/levels.js"></script>
+  <script src="js/sanctuary.js"></script>
+  <script src="js/game.js"></script>
+
+</body>
+</html>
+
